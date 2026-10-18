@@ -4,6 +4,10 @@ Versionen tragen das Datum ihrer Veröffentlichung.
 
 ## 2026.10.18
 
+- **`install.sh`:** richtet das Portal auf Debian/Ubuntu mit Caddy und PHP 8.5 ein (eigener PHP-FPM-Pool,
+  gesperrte Ordner, Zugriff nur aus erlaubten Netzen, cron-Prüfungen) – Werte müssen vorher angepasst werden.
+- **Demo im Browser** über GitHub Pages (`docs/demo/`).
+- **Neues Erscheinungsbild:** Kopfleiste mit Menügruppen, hell/dunkel nach Systemeinstellung.
 - **Logos automatisch nach Betriebssystem:** Steht beim Icon „automatisch“, nimmt das Portal das
   Logo, dessen Name im Feld „Betriebssystem“ vorkommt (längster Treffer: „Windows Server 2008 R2
   Standard“ → Server 2008 R2, „Debian 13“ → Debian). Ein von Hand gewähltes Icon hat Vorrang.

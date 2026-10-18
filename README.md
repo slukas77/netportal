@@ -14,6 +14,10 @@ switch ports and VLANs, WAN links, a topology map (NetMap), tamper-evident stora
 (HMAC per row and file), a hash-chained audit log and sign-in via local accounts,
 PAM, LDAP/AD and YubiKey. UI in German and English.
 
+**Demo zum Ansehen im Browser:** https://slukas77.github.io/netportal/ – echte Seiten des Portals
+mit Beispieldaten (Deutsch/Englisch, hell/dunkel, Handy). Speichern, Ping und SSH brauchen den
+Server und sind in der Demo nur angedeutet.
+
 ![Übersicht](docs/screenshots/uebersicht.png)
 
 ## Funktionen
@@ -75,6 +79,29 @@ automatisch nach `users.sql` übernommen. Aus der Rolle *Operator* wird dabei
   - `build-essential`, `libpam0g-dev` (zum Bauen des PAM-Helfers)
 
 ## Installation
+
+### Schnell: `install.sh` (Debian/Ubuntu, Caddy, PHP 8.5)
+
+```bash
+git clone https://github.com/slukas77/netportal.git
+cd netportal
+nano install.sh          # Abschnitt ANPASSEN: DOMAIN, Zertifikat, erlaubte Netze …, dann CONFIGURED="yes"
+sudo ./install.sh
+```
+
+Das Skript bricht ab, solange die Werte nicht angepasst sind. Es
+
+- installiert PHP 8.5 (bei Bedarf aus der Paketquelle von Ondřej Surý) und Caddy (offizielle Quelle),
+- kopiert das Portal nach `INSTALL_DIR` – Programmdateien nur lesbar, nur `config/`, `database/`,
+  `.cache/` und `icons/` für PHP beschreibbar; Caddy darf nur `assets/` lesen,
+- legt einen eigenen PHP-FPM-Pool und `/etc/caddy/caddy.d/netportal.conf` an (Zertifikat wahlweise
+  Let's Encrypt, Caddy-intern, eigener ACME-Server oder vorhandene Dateien; Zugriff standardmäßig nur
+  aus privaten Netzen; alle Daten- und Programmordner gesperrt),
+- richtet die cron-Prüfungen ein und hält die Prüfsummen der Programmdateien fest.
+
+Erneut ausführen aktualisiert die Programmdateien; Einstellungen und Daten bleiben erhalten.
+
+### Von Hand
 
 ```bash
 sudo git clone https://github.com/slukas77/netportal.git /var/www/netportal
