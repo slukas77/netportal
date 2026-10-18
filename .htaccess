@@ -1,6 +1,7 @@
 # Network Portal – Apache-Schutz
 Options -Indexes
-<FilesMatch "^(manifest\.sha256|README\.md|CHANGELOG\.md|LICENSE|router\.php|install\.sh)$">
+DirectoryIndex index.php
+<FilesMatch "^(manifest\.sha256|README\.md|CHANGELOG\.md|LICENSE|router\.php|install\.sh|index\.html)$">
     Require all denied
 </FilesMatch>
 <FilesMatch "^\.">

@@ -169,7 +169,7 @@ copy_files() {
     if [ "$(cd "$INSTALL_DIR" && pwd -P)" != "$(cd "$SRC_DIR" && pwd -P)" ]; then
         say "Programmdateien nach $INSTALL_DIR kopieren (Daten bleiben unberührt)"
         tar -C "$SRC_DIR" \
-            --exclude=./.git --exclude=./.github --exclude=./.gitignore --exclude=./.gitattributes \
+            --exclude=./.git --exclude=./.github --exclude=./.gitignore --exclude=./.gitattributes --exclude=./.nojekyll --exclude=./index.html \
             --exclude=./docs --exclude=./demo --exclude=./install.sh \
             --exclude=./config --exclude=./database --exclude=./.cache --exclude=./icons \
             --exclude=./manifest.sha256 \
@@ -281,7 +281,7 @@ write_caddy_site() {
 		@method not method GET HEAD POST
 		respond @method 405
 
-		@blocked path /config/* /database/* /includes/* /bin/* /pam-helper/* /server/* /system/* /icons/* /docs/* /demo/* /.cache/* /manifest.sha256 /README.md /CHANGELOG.md /LICENSE /router.php /install.sh /.*
+		@blocked path /config/* /database/* /includes/* /bin/* /pam-helper/* /server/* /system/* /icons/* /docs/* /demo/* /.cache/* /manifest.sha256 /README.md /CHANGELOG.md /LICENSE /router.php /install.sh /index.html /.*
 		respond @blocked 404
 
 		@otherphp {
