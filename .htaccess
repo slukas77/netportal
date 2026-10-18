@@ -1,0 +1,17 @@
+# Network Portal – Apache-Schutz
+Options -Indexes
+<FilesMatch "^(manifest\.sha256|README\.md|CHANGELOG\.md|LICENSE|router\.php)$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+# Komprimieren und Zwischenspeichern (assets/ tragen eine Inhalts-Kennung ?v=…)
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml text/plain text/csv
+</IfModule>
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|svg)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>

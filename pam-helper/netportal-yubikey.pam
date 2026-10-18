@@ -1,0 +1,34 @@
+# PAM-Dienst für den Network-Portal-Login mit YubiKey ("PAM + YubiKey")
+# Installieren als: /etc/pam.d/netportal-yubikey
+#
+# Im Browser wird der YubiKey über PAM im OTP-Modus genutzt: ins Feld
+# "YubiKey" der Login-Seite klicken und den Key berühren – er tippt ein
+# Einmalpasswort (44 Zeichen). Der Helfer gibt dieses OTP an die PAM-Abfrage,
+# deren Text nach YubiKey/OTP klingt, das Passwort an alle anderen.
+#
+# ---------------------------------------------------------------------------
+# Variante A (empfohlen): Passwort + pam_yubico (YubiKey-OTP)
+#   apt install libpam-yubico          (RHEL: dnf install pam_yubico)
+#   API-Zugang: https://upgrade.yubico.com/getapikey/  -> id + key
+#   Zuordnung Benutzer -> Key-ID (die ersten 12 Zeichen eines OTP),
+#   /etc/yubikey_mappings, eine Zeile je Benutzer:
+#       max:ccccccabcdef
+#       root:ccccccghijkl
+# ---------------------------------------------------------------------------
+auth     required   pam_unix.so
+auth     required   pam_yubico.so id=12345 key=BASE64KEY authfile=/etc/yubikey_mappings mode=client
+account  include    common-account
+#
+# Variante A2: Offline ohne YubiCloud (Challenge-Response im Slot 2) ist für
+# Web-Logins NICHT möglich – der Key steckt am Client, nicht am Server.
+#
+# ---------------------------------------------------------------------------
+# Variante B: pam_u2f (FIDO2/U2F) – nur sinnvoll, wenn der Key am SERVER
+# steckt (Kiosk/Leitstand, Browser und Webserver auf demselben Gerät).
+# Dann in config/settings.json  "auth.pam_yubikey.u2f_server": true  setzen.
+# Für normale Browser-Logins stattdessen den YubiKey per WebAuthn unter
+# "Mein Konto" registrieren (funktioniert mit jeder Anmeldeart).
+#
+#   auth     required   pam_unix.so
+#   auth     required   pam_u2f.so authfile=/etc/Yubico/u2f_keys cue
+#   account  include    common-account

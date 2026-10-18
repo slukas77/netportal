@@ -1,0 +1,13 @@
+# PAM-Dienst für den Network-Portal-Login (Passwort)
+# Installieren als: /etc/pam.d/netportal
+#
+# Nur Authentifizierung + Kontoprüfung, keine Session, kein Passwortwechsel.
+# Mit sssd/winbind können sich hier auch AD-Konten anmelden (max@firma.local).
+#
+# Debian/Ubuntu:
+auth    include     common-auth
+account include     common-account
+#
+# RHEL/Fedora/Rocky stattdessen:
+#   auth    include     system-auth
+#   account include     system-auth

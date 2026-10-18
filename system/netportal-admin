@@ -1,0 +1,142 @@
+#!/usr/bin/env php
+<?php
+/**
+ * netportal-admin – root-Helfer für das Network Portal (System & Pakete), in PHP.
+ *
+ * Wird vom Portal per  sudo -n /usr/local/sbin/netportal-admin …  aufgerufen.
+ * Einrichtung (einmalig, als root):   sudo php system/install.php
+ *
+ * Erlaubt sind NUR:
+ *   status               Funktionsprüfung (gibt "netportal-admin ok" aus)
+ *   install <paket…>     apt-get install – nur Pakete aus der festen Liste unten
+ *   pam-helper           PAM-Helfer bauen + installieren (Quellen aus /usr/local/share/netportal,
+ *                        nicht aus dem Web-Ordner – der Webserver kann sie nicht verändern)
+ */
+
+declare(strict_types=1);
+
+const SHARE = '/usr/local/share/netportal';
+const ALLOWED = '/^(php\d+\.\d+-(sqlite3|mbstring|ldap|cli)|iputils-ping|openssh-client|iperf3|iproute2|samba-common-bin|ieee-data|snmp|ldap-utils|libpam-yubico|libpam-u2f|pamtester|build-essential|libpam0g-dev)$/';
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+putenv('PATH=/usr/sbin:/usr/bin:/sbin:/bin');
+putenv('DEBIAN_FRONTEND=noninteractive');
+putenv('LC_ALL=C');
+
+function say(string $s): void
+{
+    fwrite(STDOUT, $s . "\n");
+}
+
+function done(int $rc): never
+{
+    say('NETPORTAL-DONE rc=' . $rc);
+    exit($rc);
+}
+
+/** Programm ohne Shell starten, Ausgabe durchreichen. */
+function run(array $cmd): int
+{
+    say('== ' . date('c') . ' ' . implode(' ', $cmd));
+    $p = proc_open($cmd, [0 => ['file', '/dev/null', 'r'], 1 => STDOUT, 2 => STDOUT], $pipes);
+    return is_resource($p) ? proc_close($p) : 127;
+}
+
+function which(string $bin): ?string
+{
+    foreach (['/usr/bin/', '/bin/', '/usr/sbin/', '/sbin/'] as $d) {
+        if (is_executable($d . $bin)) {
+            return $d . $bin;
+        }
+    }
+    return null;
+}
+
+if (posix_geteuid() !== 0) {
+    say('netportal-admin: muss als root laufen (sudo)');
+    done(4);
+}
+
+$args = array_slice($argv, 1);
+switch ($args[0] ?? '') {
+    case 'status':
+        $os = @parse_ini_file('/etc/os-release') ?: [];
+        say('netportal-admin ok (' . ($os['PRETTY_NAME'] ?? 'unbekannt') . ', PHP ' . PHP_VERSION . ')');
+        exit(0);
+
+    case 'install':
+        $pkgs = array_slice($args, 1);
+        if ($pkgs === [] || count($pkgs) > 30) {
+            say('keine oder zu viele Pakete angegeben');
+            done(2);
+        }
+        foreach ($pkgs as $p) {
+            if (!preg_match(ALLOWED, $p)) {
+                say('nicht erlaubt: ' . $p);
+                done(3);
+            }
+        }
+        $apt = which('apt-get');
+        if ($apt === null) {
+            say('apt-get nicht gefunden – nur Debian/Ubuntu werden unterstützt');
+            done(5);
+        }
+        if (run([$apt, 'update', '-q']) !== 0) {
+            say('WARNUNG: apt-get update mit Fehlern');
+        }
+        $rc = run([$apt, 'install', '-y', '-q', '--no-install-recommends', ...$pkgs]);
+        if ($rc === 0 && preg_grep('/^php/', $pkgs) !== [] && ($sc = which('systemctl')) !== null) {
+            // neue PHP-Erweiterungen werden erst nach einem (sanften) Reload von PHP-FPM aktiv
+            exec(escapeshellarg($sc) . " list-units --type=service --no-legend 'php*-fpm.service' 2>/dev/null", $units);
+            foreach ($units as $u) {
+                $svc = preg_split('/\s+/', trim($u))[0] ?? '';
+                if (preg_match('/^php[\d.]*-fpm\.service$/', $svc)) {
+                    run([$sc, 'reload', $svc]);
+                }
+            }
+        }
+        done($rc);
+
+    case 'pam-helper':
+        if (!is_file(SHARE . '/pam-helper/pam_check.c')) {
+            say('Quellen fehlen in ' . SHARE . ' – "sudo php system/install.php" ausführen');
+            done(2);
+        }
+        $cc = which('cc') ?? which('gcc');
+        if ($cc === null || !is_file('/usr/include/security/pam_appl.h')) {
+            say('Compiler oder PAM-Header fehlen – Pakete build-essential und libpam0g-dev installieren');
+            done(2);
+        }
+        $tmp = sys_get_temp_dir() . '/netportal-pam-' . bin2hex(random_bytes(4));
+        mkdir($tmp, 0700);
+        $bin = $tmp . '/netportal-pam-check';
+        $rc = run([$cc, '-O2', '-Wall', '-Wextra', '-fstack-protector-strong', '-D_FORTIFY_SOURCE=2', '-o', $bin, SHARE . '/pam-helper/pam_check.c', '-lpam']);
+        if ($rc === 0) {
+            copy($bin, '/usr/local/sbin/netportal-pam-check');
+            // nur für die Gruppe des Webservers ausführbar (kein Passwort-Prüfer für andere lokale Benutzer)
+            $gid = getenv('SUDO_GID');
+            $grp = $gid !== false && ctype_digit($gid) && (int)$gid > 0 ? (int)$gid : 0;
+            chown('/usr/local/sbin/netportal-pam-check', 0);
+            chgrp('/usr/local/sbin/netportal-pam-check', $grp);
+            chmod('/usr/local/sbin/netportal-pam-check', $grp > 0 ? 04750 : 04755);
+            say('installiert: /usr/local/sbin/netportal-pam-check (setuid root' . ($grp > 0 ? ', nur Gruppe ' . $grp : '') . ')');
+            foreach (['netportal.pam' => 'netportal', 'netportal-yubikey.pam' => 'netportal-yubikey'] as $src => $dst) {
+                if (!is_file('/etc/pam.d/' . $dst)) {
+                    copy(SHARE . '/pam-helper/' . $src, '/etc/pam.d/' . $dst);
+                    chmod('/etc/pam.d/' . $dst, 0644);
+                    say('angelegt: /etc/pam.d/' . $dst);
+                } else {
+                    say('vorhanden (unverändert): /etc/pam.d/' . $dst);
+                }
+            }
+        }
+        @unlink($bin);
+        @rmdir($tmp);
+        done($rc);
+
+    default:
+        say('Aufruf: netportal-admin status | install <paket…> | pam-helper');
+        done(1);
+}

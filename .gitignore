@@ -1,0 +1,15 @@
+# Laufzeitdaten – gehören nicht ins Repository
+/config/*
+!/config/.htaccess
+/database/*
+!/database/.htaccess
+/.cache/*
+!/.cache/.htaccess
+/icons/brands/*
+!/icons/brands/.keep
+/icons/custom/*
+!/icons/custom/.keep
+# wird je Installation erzeugt: php bin/netportal-cli.php manifest
+/manifest.sha256
+*.zip
+.DS_Store
