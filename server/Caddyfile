@@ -16,7 +16,7 @@ netz.example.com {
 
 	route {
 		# Diese Ordner/Dateien dürfen nie direkt abrufbar sein – alles läuft über index.php
-		@gesperrt path */config/* */database/* */includes/* */bin/* */pam-helper/* */server/* */system/* */icons/* */.cache/* */docs/* */manifest.sha256 */README.md */CHANGELOG.md */LICENSE */router.php */install.sh */.user.ini */.htaccess
+		@gesperrt path */config/* */database/* */includes/* */bin/* */pam-helper/* */server/* */system/* */icons/* */.cache/* */docs/* */demo/* */manifest.sha256 */README.md */CHANGELOG.md */LICENSE */router.php */install.sh */.user.ini */.htaccess
 		respond @gesperrt 403
 
 		php_fastcgi unix//run/php/php8.5-fpm.sock

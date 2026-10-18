@@ -14,7 +14,7 @@ switch ports and VLANs, WAN links, a topology map (NetMap), tamper-evident stora
 (HMAC per row and file), a hash-chained audit log and sign-in via local accounts,
 PAM, LDAP/AD and YubiKey. UI in German and English.
 
-**Demo zum Ansehen im Browser:** https://slukas77.github.io/netportal/ – echte Seiten des Portals
+**Demo zum Ansehen im Browser:** https://slukas77.github.io/netportal/demo/ (English: https://slukas77.github.io/netportal/demo/en/) – echte Seiten des Portals
 mit Beispieldaten (Deutsch/Englisch, hell/dunkel, Handy). Speichern, Ping und SSH brauchen den
 Server und sind in der Demo nur angedeutet.
 

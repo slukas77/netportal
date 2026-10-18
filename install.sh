@@ -170,7 +170,7 @@ copy_files() {
         say "Programmdateien nach $INSTALL_DIR kopieren (Daten bleiben unberührt)"
         tar -C "$SRC_DIR" \
             --exclude=./.git --exclude=./.github --exclude=./.gitignore --exclude=./.gitattributes \
-            --exclude=./docs --exclude=./install.sh \
+            --exclude=./docs --exclude=./demo --exclude=./install.sh \
             --exclude=./config --exclude=./database --exclude=./.cache --exclude=./icons \
             --exclude=./manifest.sha256 \
             -cf - . | tar -C "$INSTALL_DIR" --no-same-owner -xf -
@@ -281,7 +281,7 @@ write_caddy_site() {
 		@method not method GET HEAD POST
 		respond @method 405
 
-		@blocked path /config/* /database/* /includes/* /bin/* /pam-helper/* /server/* /system/* /icons/* /docs/* /.cache/* /manifest.sha256 /README.md /CHANGELOG.md /LICENSE /router.php /install.sh /.*
+		@blocked path /config/* /database/* /includes/* /bin/* /pam-helper/* /server/* /system/* /icons/* /docs/* /demo/* /.cache/* /manifest.sha256 /README.md /CHANGELOG.md /LICENSE /router.php /install.sh /.*
 		respond @blocked 404
 
 		@otherphp {
